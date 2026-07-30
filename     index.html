@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#8FA7E8" />
+  <title>Mobil Zaman Etüdü</title>
+  <style>
+    :root {
+      --bg:#f7f7fc;
+      --card:#ffffff;
+      --text:#29263a;
+      --muted:#77738b;
+      --line:#e8e5f1;
+      --blue:#8fa7e8;
+      --blue-dark:#667fc5;
+      --purple:#ad9bdd;
+      --purple-dark:#7f6bb7;
+      --pink:#efb8d1;
+      --pink-dark:#b86d90;
+      --blue-soft:#edf2ff;
+      --purple-soft:#f2effb;
+      --pink-soft:#fff0f6;
+      --shadow:0 8px 22px rgba(93,83,137,.09);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+    body{padding-bottom:env(safe-area-inset-bottom)}
+    button,input{font:inherit} button{touch-action:manipulation}
+    .app{max-width:780px;margin:auto;padding:12px}
+    .top{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;padding:19px;border-radius:19px;margin-bottom:12px;box-shadow:var(--shadow)}
+    .top h1{font-size:22px;margin:0 0 5px}.top p{font-size:13px;margin:0;opacity:.95;line-height:1.4}
+    .card{background:var(--card);border-radius:19px;padding:15px;margin-bottom:12px;box-shadow:var(--shadow);border:1px solid #efedf5}
+    .section-title{font-weight:800;font-size:16px;margin:0 0 11px}
+    .row{display:flex;gap:8px;align-items:center}.row>*{min-width:0}
+    input{width:100%;border:1px solid var(--line);border-radius:13px;padding:13px;background:#fff;color:var(--text);outline:none}
+    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
+    .btn{border:0;border-radius:13px;padding:12px 14px;font-weight:800;cursor:pointer;min-height:47px;color:var(--text)}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .btn-blue{background:var(--blue);color:#fff}.btn-purple{background:var(--purple);color:#fff}.btn-pink{background:var(--pink);color:#593247}
+    .btn-gray{background:var(--purple-soft);color:#564c78}.btn-outline{background:#fff;border:1px solid var(--line)}
+    .mode-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 10px}
+    .mode-option{border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px;text-align:left;font-weight:800;color:var(--muted)}
+    .mode-option small{display:block;font-weight:600;font-size:11px;margin-top:4px;line-height:1.35}
+    .mode-option.active{background:var(--blue-soft);border-color:var(--blue);color:var(--blue-dark)}
+    .folder-list{display:flex;gap:8px;overflow-x:auto;padding-bottom:5px;scrollbar-width:thin}
+    .folder-chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;font-weight:800;color:#55506b}
+    .folder-chip.active{background:var(--purple);color:#fff;border-color:transparent}
+    .folder-actions{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}
+    .ops{display:grid;gap:8px}
+    .op-row{display:grid;grid-template-columns:42px 1fr 46px;gap:8px;align-items:center}
+    .op-no{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--blue-soft);color:var(--blue-dark);font-weight:900}
+    .op-delete{height:42px;border:0;border-radius:12px;background:var(--pink-soft);color:var(--pink-dark);font-weight:900;font-size:19px}
+    .measurement{padding:20px 14px;text-align:center}
+    .quantity-box{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px auto 0;padding:10px 12px;background:var(--blue-soft);border-radius:14px;max-width:340px}
+    .quantity-box label{font-size:13px;font-weight:800;color:var(--blue-dark)}
+    .quantity-box input{width:92px;text-align:center;padding:9px 10px;font-weight:900}
+    .quantity-note{font-size:11px;color:var(--muted);margin-top:5px}
+    .cycle-badge{display:inline-block;background:var(--purple-soft);color:var(--purple-dark);border-radius:999px;padding:7px 13px;font-weight:800;font-size:14px}
+    .current-label{color:var(--muted);font-size:13px;margin-top:16px}.current-op{font-size:25px;font-weight:900;line-height:1.2;margin:5px 0 8px;min-height:60px;display:flex;align-items:center;justify-content:center}
+    .progress{font-size:14px;color:var(--muted);font-weight:700}
+    .timer{font-variant-numeric:tabular-nums;font-size:58px;line-height:1;font-weight:900;letter-spacing:-2px;margin:22px 0;color:#242235}
+    .main-buttons{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px;position:sticky;bottom:8px;z-index:2;padding:5px;background:#ffffffea;backdrop-filter:blur(8px);border-radius:16px}
+    .main-buttons .btn{min-height:63px;font-size:18px}
+    .new-cycle{width:100%;margin-top:10px}
+    .status{min-height:20px;margin-top:10px;font-size:13px;font-weight:700;color:var(--muted)}
+    .cycle-list{display:grid;gap:11px}
+    .cycle-card{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
+    .cycle-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;background:var(--blue-soft)}
+    .cycle-title{font-weight:900;color:#53679f;font-size:16px}
+    .cycle-meta{font-size:12px;color:var(--muted);font-weight:700;margin-top:2px}
+    .cycle-delete{border:0;border-radius:11px;background:var(--pink-soft);color:var(--pink-dark);font-weight:900;padding:9px 11px;min-width:54px}
+    .cycle-body{padding:12px 14px;display:grid;gap:9px}
+    .metric-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:9px;border-bottom:1px solid #f0edf6}
+    .metric-row:last-child{border-bottom:0;padding-bottom:0}
+    .metric-label{font-size:14px;color:var(--muted);font-weight:700;text-align:left}
+    .metric-value{font-size:16px;font-weight:900;color:var(--text);text-align:right;font-variant-numeric:tabular-nums}
+    .metric-total{background:var(--pink-soft);margin:2px -4px -2px;padding:11px;border-radius:12px;border-bottom:0}
+    .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+    .summary-card{border-radius:14px;padding:13px;background:var(--purple-soft);text-align:center}
+    .summary-card:nth-child(2){background:var(--blue-soft)}
+    .summary-card:nth-child(3){background:var(--pink-soft)}
+    .summary-card:nth-child(4){background:#f4f2fb}
+    .summary-label{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:5px}
+    .summary-value{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums}
+    .empty{padding:20px;text-align:center;color:var(--muted)}
+    .data-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .hint{font-size:12px;color:var(--muted);line-height:1.45;margin-top:8px}
+    .hidden{display:none!important}
+    .toast{position:fixed;left:50%;bottom:95px;transform:translateX(-50%);background:#312d46;color:white;padding:11px 15px;border-radius:999px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:10;max-width:90%;text-align:center}
+    .toast.show{opacity:1}
+    @media(max-width:600px){
+      .app{padding:8px}.top,.card{border-radius:17px}.timer{font-size:53px}.current-op{font-size:22px}
+      .main-buttons{grid-template-columns:1fr 1.15fr 1fr}.main-buttons .btn{font-size:16px;padding:10px 6px}
+      .folder-actions{grid-template-columns:1fr}.data-actions{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Mobil Zaman Etüdü</h1>
+    <p>Operasyonu seç, ölçüm biçimini belirle ve süreleri telefonundan kaydet.</p>
+  </header>
+
+  <section class="card">
+    <h2 class="section-title">Operasyon Tanımları</h2>
+    <div id="folderList" class="folder-list"></div>
+    <div class="mode-picker" aria-label="Ölçüm biçimi">
+      <button id="totalModeBtn" class="mode-option active" type="button">Tek Süre<small>Tüm işlemi tek süre olarak ölçer.</small></button>
+      <button id="detailModeBtn" class="mode-option" type="button">Çok Adımlı<small>İşlem adımlarını Tur ile ayrı ayrı ölçer.</small></button>
+    </div>
+    <div class="folder-actions">
+      <input id="folderName" maxlength="60" aria-label="Operasyon adı" />
+      <button id="addFolderBtn" class="btn btn-blue">Operasyon ekle</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button id="renameFolderBtn" class="btn btn-gray" style="flex:1">Yeniden adlandır</button>
+      <button id="deleteFolderBtn" class="btn btn-pink" style="flex:1">Operasyonu sil</button>
+    </div>
+  </section>
+
+  <section id="operationsCard" class="card hidden">
+    <h2 class="section-title">Operasyon Aşamaları</h2>
+    <div id="operations" class="ops"></div>
+    <div class="row" style="margin-top:10px">
+      <input id="operationName" maxlength="100" aria-label="Aşama adı" />
+      <button id="addOperationBtn" class="btn btn-blue">Aşama ekle</button>
+    </div>
+    <div class="hint">Operasyonlar eklenme sırasına göre ölçülür. Ölçüm sürerken liste değiştirilemez.</div>
+  </section>
+
+  <section id="measurementCard" class="card measurement hidden">
+    <span id="cycleBadge" class="cycle-badge">Çevrim 1</span>
+    <div class="quantity-box">
+      <label for="productQty">Ürün adedi</label>
+      <input id="productQty" type="number" min="1" step="1" inputmode="numeric" value="1" />
+    </div>
+    <div class="quantity-note">Sonuçlar ürün başına süre olarak hesaplanır.</div>
+    <div class="current-label">Şu an ölçülen operasyon</div>
+    <div id="currentOperation" class="current-op">—</div>
+    <div id="progressText" class="progress">0 / 0</div>
+    <div id="timer" class="timer">00:00.00</div>
+
+    <div class="main-buttons">
+      <button id="startBtn" class="btn btn-blue">Başlat</button>
+      <button id="lapBtn" class="btn btn-purple">Tur</button>
+      <button id="pauseBtn" class="btn btn-pink">Durdur</button>
+    </div>
+    <button id="newCycleBtn" class="btn btn-gray new-cycle">Yeni Çevrim</button>
+    <div id="status" class="status">Ölçüme başlamak için Başlat'a dokunun.</div>
+  </section>
+
+  <section id="resultsCard" class="card hidden">
+    <h2 class="section-title">Kayıtlı Ölçümler <span id="savedCount" style="font-size:13px;color:#64748b;font-weight:700"></span></h2>
+    <div id="resultMode" class="hint" style="margin:0 0 10px;font-weight:700"></div>
+    <div id="results"></div>
+    <div class="data-actions">
+      <button id="deleteLastCycleBtn" class="btn btn-gray">Son çevrimi sil</button>
+      <button id="clearCyclesBtn" class="btn btn-pink">Tüm ölçümleri sil</button>
+    </div>
+    <div class="hint">Kayıtlar bu telefonun tarayıcısında saklanır. Tarayıcı verileri temizlenirse kayıtlar da silinir.</div>
+  </section>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'osp_mobile_time_study_v2';
+  const $ = id => document.getElementById(id);
+  const els = {
+    folderList:$('folderList'), folderName:$('folderName'), addFolderBtn:$('addFolderBtn'), renameFolderBtn:$('renameFolderBtn'), deleteFolderBtn:$('deleteFolderBtn'), totalModeBtn:$('totalModeBtn'), detailModeBtn:$('detailModeBtn'),
+    operationsCard:$('operationsCard'), operations:$('operations'), operationName:$('operationName'), addOperationBtn:$('addOperationBtn'),
+    measurementCard:$('measurementCard'), cycleBadge:$('cycleBadge'), productQty:$('productQty'), currentOperation:$('currentOperation'), progressText:$('progressText'), timer:$('timer'),
+    startBtn:$('startBtn'), lapBtn:$('lapBtn'), pauseBtn:$('pauseBtn'), newCycleBtn:$('newCycleBtn'), status:$('status'),
+    resultsCard:$('resultsCard'), results:$('results'), resultMode:$('resultMode'), savedCount:$('savedCount'), deleteLastCycleBtn:$('deleteLastCycleBtn'), clearCyclesBtn:$('clearCyclesBtn'), toast:$('toast')
+  };
+
+  let state = loadState();
+  let selectedFolderId = state.selectedFolderId || null;
+  let run = blankRun();
+  let wakeLock = null;
+  let selectedNewMode = 'total';
+
+  function blankRun(){ return {running:false,elapsed:0,startedAt:0,index:0,values:[],completed:false,interval:null}; }
+  function loadState(){
+    try {
+      const data=JSON.parse(localStorage.getItem(STORAGE_KEY)) || {folders:[], selectedFolderId:null};
+      (data.folders||[]).forEach(f=>{
+        if(!f.mode) f.mode=(f.operations?.length===1?'total':'detail');
+        if(f.mode==='total') f.operations=['Tek operasyon'];
+        if(!Number.isInteger(Number(f.productQty)) || Number(f.productQty)<1) f.productQty=1;
+        if(!f.session) f.session={elapsed:0,index:0,values:[],completed:false};
+        if(!Array.isArray(f.cycles)) f.cycles=[];
+      });
+      return data;
+    } catch { return {folders:[], selectedFolderId:null}; }
+  }
+  function saveState(){ state.selectedFolderId=selectedFolderId; localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function currentFolder(){ return state.folders.find(f=>f.id===selectedFolderId)||null; }
+  function toast(msg){ els.toast.textContent=msg; els.toast.classList.add('show'); setTimeout(()=>els.toast.classList.remove('show'),1800); }
+  function escapeHtml(s){ return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+
+  function saveRunToFolder(){
+    const f=currentFolder(); if(!f) return;
+    f.session={elapsed:run.elapsed,index:run.index,values:[...run.values],completed:run.completed};
+    saveState();
+  }
+  function loadRunFromFolder(){
+    clearInterval(run.interval); releaseWake();
+    const f=currentFolder(); const s=f?.session||{};
+    run={running:false,elapsed:Number(s.elapsed)||0,startedAt:0,index:Number(s.index)||0,values:Array.isArray(s.values)?[...s.values]:[],completed:!!s.completed,interval:null};
+  }
+  function pauseAndSaveCurrent(){
+    if(run.running){ tick(); run.running=false; clearInterval(run.interval); releaseWake(); }
+    saveRunToFolder();
+  }
+
+  function render(){
+    renderModePicker(); renderFolders();
+    const folder=currentFolder();
+    els.operationsCard.classList.toggle('hidden',!folder||folder.mode==='total');
+    els.measurementCard.classList.toggle('hidden',!folder||folder.operations.length===0);
+    els.resultsCard.classList.toggle('hidden',!folder);
+    if(folder){ els.productQty.value=folder.productQty||1; renderOperations(); renderMeasurement(); renderResults(); }
+  }
+  function renderModePicker(){
+    els.totalModeBtn.classList.toggle('active',selectedNewMode==='total');
+    els.detailModeBtn.classList.toggle('active',selectedNewMode==='detail');
+  }
+  function renderFolders(){
+    els.folderList.innerHTML='';
+    if(!state.folders.length){ els.folderList.innerHTML='<span class="empty">Henüz operasyon tanımı yok.</span>'; return; }
+    state.folders.forEach(f=>{
+      const wrap=document.createElement('div'); wrap.style.cssText='display:flex;align-items:center;gap:5px;flex:0 0 auto';
+      const b=document.createElement('button'); b.className='folder-chip'+(f.id===selectedFolderId?' active':''); b.textContent=f.name;
+      b.onclick=()=>{
+        if(f.id===selectedFolderId) return;
+        pauseAndSaveCurrent();
+        selectedFolderId=f.id; selectedNewMode=f.mode; loadRunFromFolder(); saveState(); render();
+      };
+      const del=document.createElement('button'); del.className='op-delete'; del.style.cssText='width:40px;height:40px;border-radius:999px;flex:0 0 40px'; del.textContent='×'; del.title='Operasyonu sil';
+      del.onclick=e=>{ e.stopPropagation(); deleteFolderById(f.id); };
+      wrap.appendChild(b); wrap.appendChild(del); els.folderList.appendChild(wrap);
+    });
+  }
+  function renderOperations(){
+    const folder=currentFolder(); els.operations.innerHTML='';
+    if(!folder.operations.length){ els.operations.innerHTML='<div class="empty">Önce en az bir operasyon ekleyin.</div>'; return; }
+    folder.operations.forEach((op,i)=>{
+      const row=document.createElement('div'); row.className='op-row';
+      row.innerHTML=`<div class="op-no">${i+1}</div><input value="${escapeHtml(op)}" aria-label="${i+1}. operasyon"><button class="op-delete" aria-label="Sil">×</button>`;
+      const input=row.querySelector('input'), del=row.querySelector('button');
+      input.disabled=isMeasurementActive(); del.disabled=isMeasurementActive();
+      input.onchange=()=>{ const v=input.value.trim(); if(!v){input.value=op;return;} folder.operations[i]=v; saveState(); renderMeasurement(); renderResults(); };
+      del.onclick=()=>{ if(isMeasurementActive()) return toast('Önce bu operasyondeki ölçümü tamamlayın veya sıfırlayın'); if(!confirm(`“${op}” silinsin mi? Mevcut ölçüm tabloları da bu operasyonde sıfırlanacaktır.`)) return;
+        folder.operations.splice(i,1); folder.cycles=[]; folder.session={elapsed:0,index:0,values:[],completed:false}; loadRunFromFolder(); saveState(); render(); toast('Operasyon silindi'); };
+      els.operations.appendChild(row);
+    });
+  }
+  function renderMeasurement(){
+    const folder=currentFolder(); if(!folder||!folder.operations.length) return;
+    const idx=Math.min(run.index,folder.operations.length-1);
+    els.currentOperation.textContent=run.completed?'Çevrim tamamlandı':(folder.mode==='total'?'Tek Süre':folder.operations[idx]);
+    els.progressText.textContent=run.completed?`${folder.operations.length} / ${folder.operations.length}`:`${idx+1} / ${folder.operations.length}`;
+    els.cycleBadge.textContent=`Çevrim ${(folder.cycles?.length||0)+1}`;
+    els.timer.textContent=formatTime(run.elapsed);
+    els.startBtn.textContent=run.elapsed>0&&!run.running?'Devam':'Başlat';
+    els.startBtn.disabled=run.running||run.completed; els.lapBtn.disabled=!run.running||run.completed; els.pauseBtn.disabled=!run.running;
+    els.newCycleBtn.classList.toggle('hidden',folder.mode==='total'); els.newCycleBtn.disabled=folder.mode==='total'||run.running||!run.completed;
+    els.productQty.disabled=isMeasurementActive();
+    els.operationName.disabled=isMeasurementActive(); els.addOperationBtn.disabled=isMeasurementActive();
+    if(run.completed) els.status.textContent='Çevrim kaydedildi. Yeni ölçüm için Yeni Çevrim’e dokunun.';
+    else if(run.running) els.status.textContent=folder.mode==='total'?'Tur’a dokununca çevrim ürün adedine bölünerek kaydedilir ve yenisi başlar.':'Operasyon bitince Tur’a dokunun. Süre ürün adedine bölünerek kaydedilir.';
+    else if(run.elapsed>0) els.status.textContent='Süre duraklatıldı. Devam etmek için Devam’a dokunun.';
+    else els.status.textContent='Ölçüme başlamak için Başlat’a dokunun.';
+  }
+  function normalizedCycleValues(cycle){
+    const qty=Math.max(1,Number(cycle.productQty)||1);
+    const raw=Array.isArray(cycle.rawValues)?cycle.rawValues:cycle.values;
+    return (raw||[]).map(v=>Number(v)/qty);
+  }
+  function renderResults(){
+    const folder=currentFolder(), cycles=folder.cycles||[];
+    els.savedCount.textContent=cycles.length?`(${cycles.length} çevrim)`:'';
+    const single=folder.mode==='total';
+    els.resultMode.textContent=single
+      ? 'Her çevrim ayrı kartta gösterilir. Süreler ürün başınadır.'
+      : 'Her çevrimin aşamaları aşağıda dikey olarak gösterilir. Süreler ürün başınadır.';
+    if(!cycles.length){
+      els.results.innerHTML='<div class="empty">Henüz kaydedilmiş çevrim yok.</div>';
+      return;
+    }
+
+    const totals=[];
+    let html='<div class="cycle-list">';
+
+    cycles.forEach((cycle,ci)=>{
+      const values=normalizedCycleValues(cycle);
+      const qty=Math.max(1,Number(cycle.productQty)||1);
+      const total=values.reduce((sum,v)=>sum+(Number(v)||0),0);
+      totals.push(total);
+
+      html+=`<article class="cycle-card">
+        <div class="cycle-head">
+          <div>
+            <div class="cycle-title">${ci+1}. Çevrim</div>
+            <div class="cycle-meta">${qty} ürün · ürün başına süre</div>
+          </div>
+          <button class="cycle-delete" type="button" data-cycle-index="${ci}">Sil</button>
+        </div>
+        <div class="cycle-body">`;
+
+      if(single){
+        const value=values[0];
+        html+=`<div class="metric-row">
+          <span class="metric-label">Tek Süre</span>
+          <span class="metric-value">${Number.isFinite(value)?value.toFixed(2):'—'} sn</span>
+        </div>`;
+      }else{
+        folder.operations.forEach((op,oi)=>{
+          const value=values[oi];
+          html+=`<div class="metric-row">
+            <span class="metric-label">${escapeHtml(op)}</span>
+            <span class="metric-value">${Number.isFinite(value)?value.toFixed(2):'—'} sn</span>
+          </div>`;
+        });
+        html+=`<div class="metric-row metric-total">
+          <span class="metric-label">Toplam çevrim</span>
+          <span class="metric-value">${total.toFixed(2)} sn</span>
+        </div>`;
+      }
+
+      html+='</div></article>';
+    });
+
+    html+='</div>';
+
+    const average=totals.reduce((a,b)=>a+b,0)/totals.length;
+    html+=`<div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">Ortalama</div>
+        <div class="summary-value">${average.toFixed(2)} sn</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">En kısa</div>
+        <div class="summary-value">${Math.min(...totals).toFixed(2)} sn</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">En uzun</div>
+        <div class="summary-value">${Math.max(...totals).toFixed(2)} sn</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Toplam çevrim</div>
+        <div class="summary-value">${cycles.length}</div>
+      </div>
+    </div>`;
+
+    els.results.innerHTML=html;
+  }
+
+  function avg(vals){ return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):'—'; }
+  function isMeasurementActive(){ return run.running||run.elapsed>0||run.values.length>0||run.completed; }
+  function formatTime(ms){ const m=Math.floor(ms/60000),s=Math.floor(ms/1000)%60,h=Math.floor(ms%1000/10); return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(h).padStart(2,'0')}`; }
+  function tick(){ run.elapsed=performance.now()-run.startedAt; els.timer.textContent=formatTime(run.elapsed); }
+  async function keepAwake(){ try{ if('wakeLock'in navigator) wakeLock=await navigator.wakeLock.request('screen'); }catch{} }
+  async function releaseWake(){ try{ if(wakeLock) await wakeLock.release(); }catch{} wakeLock=null; }
+
+  function start(){ if(run.completed)return; run.running=true; run.startedAt=performance.now()-run.elapsed; run.interval=setInterval(tick,20); keepAwake(); renderMeasurement(); }
+  function pause(){ if(!run.running)return; tick(); run.running=false; clearInterval(run.interval); releaseWake(); saveRunToFolder(); renderMeasurement(); }
+  function lap(){
+    const folder=currentFolder(); if(!run.running||!folder)return; tick();
+    const rawSeconds=Number((run.elapsed/1000).toFixed(2));
+    if(folder.mode==='total'){
+      folder.cycles.push({id:uid(),createdAt:new Date().toISOString(),rawValues:[rawSeconds],productQty:folder.productQty,values:[rawSeconds]});
+      run.elapsed=0; run.values=[]; run.index=0; run.completed=false; run.startedAt=performance.now();
+      saveRunToFolder(); saveState(); els.timer.textContent='00:00.00'; toast('Çevrim kaydedildi, yenisi başladı'); renderResults(); renderMeasurement(); return;
+    }
+    run.values[run.index]=rawSeconds; run.elapsed=0;
+    if(run.index>=folder.operations.length-1){
+      run.running=false; clearInterval(run.interval); run.completed=true; releaseWake(); els.timer.textContent='00:00.00';
+      folder.cycles.push({id:uid(),createdAt:new Date().toISOString(),rawValues:[...run.values],productQty:folder.productQty,values:[...run.values]});
+      saveRunToFolder(); saveState(); toast('Çevrim kaydedildi'); renderResults();
+    }else{ run.index++; run.startedAt=performance.now(); saveRunToFolder(); }
+    renderMeasurement(); renderOperations();
+  }
+  function newCycle(){ const folder=currentFolder(); if(!folder||!run.completed)return; folder.session={elapsed:0,index:0,values:[],completed:false}; loadRunFromFolder(); saveState(); render(); toast('Yeni çevrim hazır'); }
+  function resetRun(){ clearInterval(run.interval); releaseWake(); run=blankRun(); saveRunToFolder(); }
+  function deleteFolderById(id){
+    const f=state.folders.find(x=>x.id===id); if(!f)return;
+    if(!confirm(`“${f.name}” operasyonü, operasyonları ve tüm ölçümleri kalıcı olarak silinsin mi?`))return;
+    if(id===selectedFolderId) pauseAndSaveCurrent();
+    state.folders=state.folders.filter(x=>x.id!==id); selectedFolderId=state.folders[0]?.id||null;
+    loadRunFromFolder(); saveState(); render(); toast('Operasyon tanımı silindi');
+  }
+
+  els.totalModeBtn.onclick=()=>{selectedNewMode='total';renderModePicker();};
+  els.detailModeBtn.onclick=()=>{selectedNewMode='detail';renderModePicker();};
+  els.addFolderBtn.onclick=()=>{ const name=els.folderName.value.trim(); if(!name)return toast('Operasyon adı yazın'); pauseAndSaveCurrent(); const f={id:uid(),name,mode:selectedNewMode,operations:selectedNewMode==='total'?['Tek operasyon']:[],cycles:[],productQty:1,session:{elapsed:0,index:0,values:[],completed:false}}; state.folders.push(f); selectedFolderId=f.id; els.folderName.value=''; loadRunFromFolder(); saveState(); render(); };
+  els.renameFolderBtn.onclick=()=>{const f=currentFolder();if(!f)return toast('Önce operasyon seçin');const name=prompt('Yeni operasyon adı:',f.name);if(!name?.trim())return;f.name=name.trim();saveState();render();};
+  els.deleteFolderBtn.onclick=()=>{const f=currentFolder();if(!f)return toast('Önce operasyon seçin');deleteFolderById(f.id);};
+  els.productQty.onchange=()=>{ const f=currentFolder(); if(!f)return; const qty=Math.max(1,Math.floor(Number(els.productQty.value)||1)); f.productQty=qty; els.productQty.value=qty; saveState(); renderResults(); toast(`Ürün adedi ${qty} olarak kaydedildi`); };
+  els.addOperationBtn.onclick=()=>{ const f=currentFolder(),name=els.operationName.value.trim(); if(f?.mode==='total')return;if(!f||!name)return toast('Operasyon adı yazın');if(isMeasurementActive())return toast('Önce bu operasyondeki ölçümü tamamlayın');f.operations.push(name);f.cycles=[];f.session={elapsed:0,index:0,values:[],completed:false};els.operationName.value='';loadRunFromFolder();saveState();render();};
+  els.operationName.addEventListener('keydown',e=>{if(e.key==='Enter')els.addOperationBtn.click();});
+  els.startBtn.onclick=start; els.pauseBtn.onclick=pause; els.lapBtn.onclick=lap; els.newCycleBtn.onclick=newCycle;
+  els.results.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-cycle-index]');
+    if(!btn)return;
+    const f=currentFolder();
+    const index=Number(btn.dataset.cycleIndex);
+    if(!f||!Number.isInteger(index)||!f.cycles[index])return;
+    if(!confirm(`${index+1}. çevrim silinsin mi?`))return;
+    f.cycles.splice(index,1);
+    saveState();
+    renderResults();
+    renderMeasurement();
+    toast('Çevrim silindi');
+  });
+  els.deleteLastCycleBtn.onclick=()=>{const f=currentFolder();if(!f?.cycles?.length)return toast('Silinecek çevrim yok');if(!confirm('Son kaydedilen çevrim silinsin mi?'))return;f.cycles.pop();saveState();renderResults();renderMeasurement();};
+  els.clearCyclesBtn.onclick=()=>{const f=currentFolder();if(!f?.cycles?.length)return toast('Silinecek ölçüm yok');if(!confirm('Bu operasyondeki tüm ölçümler silinsin mi?'))return;f.cycles=[];saveState();renderResults();renderMeasurement();};
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&run.running)keepAwake();});
+  window.addEventListener('beforeunload',()=>{pauseAndSaveCurrent();});
+
+  if(!selectedFolderId&&state.folders.length) selectedFolderId=state.folders[0].id;
+  if(currentFolder()) selectedNewMode=currentFolder().mode;
+  loadRunFromFolder(); render();
+})();
+</script>
+</body>
+</html>
