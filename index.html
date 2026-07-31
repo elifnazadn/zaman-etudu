@@ -60,8 +60,8 @@
     .current-label{color:var(--muted);font-size:13px;margin-top:16px}.current-op{font-size:25px;font-weight:900;line-height:1.2;margin:5px 0 8px;min-height:60px;display:flex;align-items:center;justify-content:center}
     .progress{font-size:14px;color:var(--muted);font-weight:700}
     .timer{font-variant-numeric:tabular-nums;font-size:58px;line-height:1;font-weight:900;letter-spacing:-2px;margin:22px 0;color:#242235}
-    .main-buttons{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px;position:sticky;bottom:8px;z-index:2;padding:5px;background:#ffffffea;backdrop-filter:blur(8px);border-radius:16px}
-    .main-buttons .btn{min-height:63px;font-size:18px}
+    .main-buttons{display:none}
+    
     .new-cycle{width:100%;margin-top:10px}
     .status{min-height:20px;margin-top:10px;font-size:13px;font-weight:700;color:var(--muted)}
     .cycle-list{display:grid;gap:11px}
@@ -100,9 +100,167 @@
     .toast.show{opacity:1}
     @media(max-width:600px){
       .app{padding:8px}.top,.card{border-radius:17px}.timer{font-size:53px}.current-op{font-size:22px}
-      .main-buttons{grid-template-columns:1fr 1.15fr 1fr}.main-buttons .btn{font-size:16px;padding:10px 6px}
+      
       .folder-actions{grid-template-columns:1fr}.data-actions{grid-template-columns:1fr}
     }
+
+    /* Kronometre odaklı yeni ölçüm tasarımı */
+    .measurement{
+      padding:22px 14px 18px;
+      background:linear-gradient(180deg,#ffffff 0%,#fbfaff 100%);
+      overflow:hidden;
+    }
+    .measurement-topline{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:14px;
+    }
+    .measurement-topline .cycle-badge{margin:0}
+    .stage-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      border-radius:999px;
+      padding:8px 12px;
+      background:var(--pink-soft);
+      color:var(--pink-dark);
+      font-size:12px;
+      font-weight:900;
+    }
+    .stage-dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:var(--pink-dark);
+      flex:0 0 auto;
+    }
+    .stopwatch-panel{
+      position:relative;
+      margin:12px 0 16px;
+      padding:24px 12px 22px;
+      border-radius:28px;
+      background:
+        radial-gradient(circle at 50% 15%,rgba(173,155,221,.16),transparent 44%),
+        linear-gradient(180deg,#ffffff,#f8f7fd);
+      border:1px solid #ece8f6;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 14px 35px rgba(93,83,137,.10);
+    }
+    .current-label{
+      margin-top:0;
+      font-size:12px;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      font-weight:900;
+    }
+    .current-op{
+      min-height:auto;
+      margin:7px 0 3px;
+      font-size:27px;
+      color:#2f2a46;
+      transition:opacity .18s ease,transform .18s ease;
+    }
+    .current-op.stage-change{
+      opacity:.25;
+      transform:translateY(5px);
+    }
+    .progress{
+      display:inline-block;
+      margin-top:5px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:var(--blue-soft);
+      color:var(--blue-dark);
+      font-size:12px;
+      font-weight:900;
+    }
+    .timer{
+      margin:24px 0 10px;
+      font-size:66px;
+      letter-spacing:-3px;
+      color:#242235;
+      text-shadow:0 2px 0 #fff;
+    }
+    .timer.running{
+      color:var(--purple-dark);
+    }
+    .control-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    .control-grid .btn{
+      min-height:64px;
+      border-radius:18px;
+      font-size:17px;
+      box-shadow:0 7px 18px rgba(93,83,137,.10);
+    }
+    .control-grid .btn:active{
+      transform:scale(.985);
+    }
+    .primary-action{
+      background:linear-gradient(135deg,var(--blue),var(--purple));
+      color:#fff;
+    }
+    .danger-soft{
+      background:var(--pink-soft);
+      color:var(--pink-dark);
+      border:1px solid #f5d4e3;
+    }
+    .secondary-action{
+      background:var(--purple-soft);
+      color:var(--purple-dark);
+      border:1px solid #e4def3;
+    }
+    .lap-action{
+      background:var(--purple);
+      color:#fff;
+    }
+    .pause-action{
+      background:var(--pink);
+      color:#593247;
+    }
+    .measurement .quantity-box{
+      margin-top:12px;
+      max-width:310px;
+    }
+    .measurement .quantity-note{
+      margin-bottom:4px;
+    }
+    .measurement-status{
+      min-height:20px;
+      margin-top:12px;
+      font-size:12px;
+      font-weight:800;
+      color:var(--muted);
+    }
+    .completion-banner{
+      display:none;
+      margin:12px 0 0;
+      padding:13px 14px;
+      border-radius:15px;
+      background:#eefbf4;
+      color:#377b59;
+      font-weight:900;
+      font-size:14px;
+    }
+    .completion-banner.show{
+      display:block;
+      animation:popIn .22s ease;
+    }
+    @keyframes popIn{
+      from{opacity:0;transform:scale(.97)}
+      to{opacity:1;transform:scale(1)}
+    }
+    @media(max-width:600px){
+      .timer{font-size:58px}
+      .current-op{font-size:24px}
+      .stopwatch-panel{padding:22px 10px 20px;border-radius:24px}
+      .control-grid .btn{min-height:60px}
+    }
+
   </style>
 </head>
 <body>
@@ -139,26 +297,41 @@
     <div class="hint">Operasyonlar eklenme sırasına göre ölçülür. Ölçüm sürerken liste değiştirilemez.</div>
   </section>
 
+  
   <section id="measurementCard" class="card measurement hidden">
-    <span id="cycleBadge" class="cycle-badge">Çevrim 1</span>
+    <div class="measurement-topline">
+      <span id="cycleBadge" class="cycle-badge">Çevrim 1</span>
+      <span class="stage-pill"><span class="stage-dot"></span><span id="stageInfo">Hazır</span></span>
+    </div>
+
+    <div class="stopwatch-panel">
+      <div class="current-label">Şu an ölçülen operasyon</div>
+      <div id="currentOperation" class="current-op">—</div>
+      <div id="progressText" class="progress">0 / 0</div>
+      <div id="timer" class="timer">00:00.00</div>
+    </div>
+
     <div class="quantity-box">
       <label for="productQty">Ürün adedi</label>
       <input id="productQty" type="number" min="1" step="1" inputmode="numeric" pattern="[0-9]*" value="1" />
     </div>
     <div class="quantity-note">Sonuçlar ürün başına süre olarak hesaplanır.</div>
-    <div class="current-label">Şu an ölçülen operasyon</div>
-    <div id="currentOperation" class="current-op">—</div>
-    <div id="progressText" class="progress">0 / 0</div>
-    <div id="timer" class="timer">00:00.00</div>
 
-    <div class="main-buttons">
-      <button id="startBtn" class="btn btn-blue">Başlat</button>
-      <button id="lapBtn" class="btn btn-purple">Tur</button>
-      <button id="pauseBtn" class="btn btn-pink">Durdur</button>
+    <div id="idleControls" class="control-grid">
+      <button id="resetBtn" class="btn danger-soft" type="button">↺ Sıfırla</button>
+      <button id="startBtn" class="btn primary-action" type="button">Başlat</button>
     </div>
-    <button id="newCycleBtn" class="btn btn-gray new-cycle">Yeni Çevrim</button>
-    <div id="status" class="status">Ölçüme başlamak için Başlat'a dokunun.</div>
+
+    <div id="runningControls" class="control-grid hidden">
+      <button id="pauseBtn" class="btn pause-action" type="button">Durdur</button>
+      <button id="lapBtn" class="btn lap-action" type="button">Tur</button>
+    </div>
+
+    <button id="newCycleBtn" class="btn btn-gray new-cycle hidden" type="button">Yeni Çevrim</button>
+    <div id="completionBanner" class="completion-banner">✓ Çevrim başarıyla tamamlandı</div>
+    <div id="status" class="measurement-status">Ölçüme başlamak için Başlat’a dokunun.</div>
   </section>
+
 
   <section id="resultsCard" class="card hidden">
     <h2 class="section-title">Kayıtlı Ölçümler <span id="savedCount" style="font-size:13px;color:#64748b;font-weight:700"></span></h2>
@@ -180,8 +353,8 @@
   const els = {
     folderList:$('folderList'), folderName:$('folderName'), addFolderBtn:$('addFolderBtn'), renameFolderBtn:$('renameFolderBtn'), deleteFolderBtn:$('deleteFolderBtn'), totalModeBtn:$('totalModeBtn'), detailModeBtn:$('detailModeBtn'),
     operationsCard:$('operationsCard'), operations:$('operations'), operationName:$('operationName'), addOperationBtn:$('addOperationBtn'),
-    measurementCard:$('measurementCard'), cycleBadge:$('cycleBadge'), productQty:$('productQty'), currentOperation:$('currentOperation'), progressText:$('progressText'), timer:$('timer'),
-    startBtn:$('startBtn'), lapBtn:$('lapBtn'), pauseBtn:$('pauseBtn'), newCycleBtn:$('newCycleBtn'), status:$('status'),
+    measurementCard:$('measurementCard'), cycleBadge:$('cycleBadge'), stageInfo:$('stageInfo'), productQty:$('productQty'), currentOperation:$('currentOperation'), progressText:$('progressText'), timer:$('timer'),
+    idleControls:$('idleControls'), runningControls:$('runningControls'), resetBtn:$('resetBtn'), startBtn:$('startBtn'), lapBtn:$('lapBtn'), pauseBtn:$('pauseBtn'), newCycleBtn:$('newCycleBtn'), completionBanner:$('completionBanner'), status:$('status'),
     resultsCard:$('resultsCard'), results:$('results'), resultMode:$('resultMode'), savedCount:$('savedCount'), deleteLastCycleBtn:$('deleteLastCycleBtn'), clearCyclesBtn:$('clearCyclesBtn'), toast:$('toast')
   };
 
@@ -280,19 +453,52 @@
   function renderMeasurement(){
     const folder=currentFolder(); if(!folder||!folder.operations.length) return;
     const idx=Math.min(run.index,folder.operations.length-1);
-    els.currentOperation.textContent=run.completed?'Çevrim tamamlandı':(folder.mode==='total'?'Tek Süre':folder.operations[idx]);
-    els.progressText.textContent=run.completed?`${folder.operations.length} / ${folder.operations.length}`:`${idx+1} / ${folder.operations.length}`;
+    const currentName=run.completed?'Çevrim tamamlandı':(folder.mode==='total'?'Tek Süre':folder.operations[idx]);
+
+    if(els.currentOperation.textContent!==currentName){
+      els.currentOperation.classList.add('stage-change');
+      setTimeout(()=>{
+        els.currentOperation.textContent=currentName;
+        els.currentOperation.classList.remove('stage-change');
+      },100);
+    }else{
+      els.currentOperation.textContent=currentName;
+    }
+
+    els.progressText.textContent=run.completed
+      ? `${folder.operations.length} / ${folder.operations.length}`
+      : `${idx+1} / ${folder.operations.length}`;
+
+    els.stageInfo.textContent=run.completed
+      ? 'Tamamlandı'
+      : (folder.mode==='total'?'Tek süre':`Aşama ${idx+1}`);
+
     els.cycleBadge.textContent=`Çevrim ${(folder.cycles?.length||0)+1}`;
     els.timer.textContent=formatTime(run.elapsed);
+    els.timer.classList.toggle('running',run.running);
+
     els.startBtn.textContent=run.elapsed>0&&!run.running?'Devam':'Başlat';
-    els.startBtn.disabled=run.running||run.completed; els.lapBtn.disabled=!run.running||run.completed; els.pauseBtn.disabled=!run.running;
-    els.newCycleBtn.classList.toggle('hidden',folder.mode==='total'); els.newCycleBtn.disabled=folder.mode==='total'||run.running||!run.completed;
+    els.startBtn.disabled=run.running||run.completed;
+    els.lapBtn.disabled=!run.running||run.completed;
+    els.pauseBtn.disabled=!run.running;
+    els.resetBtn.disabled=run.running||(!run.elapsed&&!run.values.length&&!run.completed);
+
+    els.idleControls.classList.toggle('hidden',run.running);
+    els.runningControls.classList.toggle('hidden',!run.running);
+
+    els.newCycleBtn.classList.toggle('hidden',folder.mode==='total'||!run.completed);
+    els.newCycleBtn.disabled=folder.mode==='total'||run.running||!run.completed;
+    els.completionBanner.classList.toggle('show',run.completed);
+
     els.productQty.disabled=run.running;
     els.operationName.disabled=isOperationEditingLocked();
     els.addOperationBtn.disabled=isOperationEditingLocked();
-    if(run.completed) els.status.textContent='Çevrim kaydedildi. Yeni ölçüm için Yeni Çevrim’e dokunun.';
-    else if(run.running) els.status.textContent=folder.mode==='total'?'Tur’a dokununca çevrim ürün adedine bölünerek kaydedilir ve yenisi başlar.':'Operasyon bitince Tur’a dokunun. Süre ürün adedine bölünerek kaydedilir.';
-    else if(run.elapsed>0) els.status.textContent='Süre duraklatıldı. Devam etmek için Devam’a dokunun.';
+
+    if(run.completed) els.status.textContent='Çevrim kaydedildi. Yeni çevrim için aşağıdaki butona dokunun.';
+    else if(run.running) els.status.textContent=folder.mode==='total'
+      ? 'Tur’a dokununca süre kaydedilir ve yeni çevrim otomatik başlar.'
+      : 'Aşama bitince Tur’a dokunun.';
+    else if(run.elapsed>0) els.status.textContent='Süre durduruldu. Devam edebilir veya sıfırlayabilirsiniz.';
     else els.status.textContent='Ölçüme başlamak için Başlat’a dokunun.';
   }
   function normalizedCycleValues(cycle){
@@ -448,6 +654,19 @@
 
   function start(){ if(run.completed)return; run.running=true; run.startedAt=performance.now()-run.elapsed; run.interval=setInterval(tick,20); keepAwake(); renderMeasurement(); }
   function pause(){ if(!run.running)return; tick(); run.running=false; clearInterval(run.interval); releaseWake(); saveRunToFolder(); renderMeasurement(); }
+
+  function resetCurrentMeasurement(){
+    const folder=currentFolder(); if(!folder)return;
+    clearInterval(run.interval);
+    releaseWake();
+    run=blankRun();
+    folder.session={elapsed:0,index:0,values:[],completed:false};
+    saveState();
+    renderMeasurement();
+    renderOperations();
+    toast('Ölçüm sıfırlandı');
+  }
+
   function lap(){
     const folder=currentFolder(); if(!run.running||!folder)return; tick();
     const rawSeconds=Number((run.elapsed/1000).toFixed(2));
@@ -491,7 +710,7 @@
   els.productQty.addEventListener('change',()=>{saveProductQty();toast(`Ürün adedi ${els.productQty.value} olarak kaydedildi`);});
   els.addOperationBtn.onclick=()=>{ const f=currentFolder(),name=els.operationName.value.trim(); if(f?.mode==='total')return;if(!f||!name)return toast('Operasyon adı yazın');if(isOperationEditingLocked())return toast('Önce devam eden ölçümü tamamlayın veya durdurun');f.operations.push(name);f.cycles=[];f.session={elapsed:0,index:0,values:[],completed:false};els.operationName.value='';loadRunFromFolder();saveState();render();};
   els.operationName.addEventListener('keydown',e=>{if(e.key==='Enter')els.addOperationBtn.click();});
-  els.startBtn.onclick=start; els.pauseBtn.onclick=pause; els.lapBtn.onclick=lap; els.newCycleBtn.onclick=newCycle;
+  els.startBtn.onclick=start; els.pauseBtn.onclick=pause; els.lapBtn.onclick=lap; els.resetBtn.onclick=resetCurrentMeasurement; els.newCycleBtn.onclick=newCycle;
   els.results.addEventListener('click',e=>{
     const btn=e.target.closest('[data-cycle-index]');
     if(!btn)return;
