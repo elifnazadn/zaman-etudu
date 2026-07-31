@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zaman-etudu-v1';
+const CACHE_NAME = 'zaman-etudu-v2';
 const APP_FILES = [
   './',
   './index.html',

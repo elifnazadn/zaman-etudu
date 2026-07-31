@@ -432,6 +432,80 @@
       .round-btn{min-height:60px;font-size:16px}
       .laps{border-radius:20px;padding-left:13px;padding-right:13px}
     }
+  
+    .confirm-overlay{
+      position:fixed;
+      inset:0;
+      z-index:1000;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+      background:rgba(36,34,53,.38);
+      backdrop-filter:blur(7px);
+      -webkit-backdrop-filter:blur(7px);
+    }
+    .confirm-overlay.show{
+      display:flex;
+      animation:overlayFade .18s ease;
+    }
+    .confirm-modal{
+      width:min(100%,430px);
+      padding:22px;
+      border:1px solid rgba(232,229,241,.95);
+      border-radius:25px;
+      background:#fff;
+      box-shadow:0 24px 70px rgba(43,38,67,.22);
+      transform-origin:center;
+      animation:modalPop .2s ease;
+    }
+    .confirm-modal h3{
+      margin:0;
+      color:var(--text);
+      font-size:21px;
+      line-height:1.25;
+      letter-spacing:-.25px;
+    }
+    .confirm-modal p{
+      margin:10px 0 20px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.5;
+    }
+    .confirm-buttons{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .confirm-cancel,
+    .confirm-accept{
+      min-height:52px;
+      border-radius:16px;
+      font-weight:900;
+      border:0;
+    }
+    .confirm-cancel{
+      background:#fff;
+      color:var(--purple-dark);
+      border:1px solid var(--line);
+    }
+    .confirm-accept{
+      background:linear-gradient(135deg,var(--blue),var(--purple));
+      color:#fff;
+    }
+    .confirm-accept.danger{
+      background:var(--pink);
+      color:#66354b;
+    }
+    @keyframes overlayFade{
+      from{opacity:0}
+      to{opacity:1}
+    }
+    @keyframes modalPop{
+      from{opacity:0;transform:scale(.96) translateY(7px)}
+      to{opacity:1;transform:scale(1) translateY(0)}
+    }
+
   </style>
 </head>
 
@@ -551,6 +625,18 @@
     </div>
   </section>
 
+
+  <div id="confirmOverlay" class="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="confirm-modal">
+      <h3 id="confirmTitle">İşlemi onayla</h3>
+      <p id="confirmMessage">Bu işlem geri alınamaz.</p>
+      <div class="confirm-buttons">
+        <button id="confirmCancel" class="confirm-cancel" type="button">İptal</button>
+        <button id="confirmAccept" class="confirm-accept" type="button">Onayla</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
 <script>
@@ -572,7 +658,7 @@
     backMeasureBtn:$('backMeasureBtn'), resultStudyName:$('resultStudyName'),
     resultSummary:$('resultSummary'), statsCard:$('statsCard'), stageStats:$('stageStats'),
     cycleResults:$('cycleResults'), deleteLastBtn:$('deleteLastBtn'), newStudyBtn:$('newStudyBtn'),
-    toast:$('toast')
+    toast:$('toast'), confirmOverlay:$('confirmOverlay'), confirmTitle:$('confirmTitle'), confirmMessage:$('confirmMessage'), confirmCancel:$('confirmCancel'), confirmAccept:$('confirmAccept')
   };
 
   let state = loadState();
@@ -629,6 +715,37 @@
     el.toast.classList.add('show');
     clearTimeout(showToast.timer);
     showToast.timer=setTimeout(()=>el.toast.classList.remove('show'),1800);
+  }
+
+
+  function askConfirm({title,message,acceptText='Onayla',danger=false}){
+    return new Promise(resolve=>{
+      el.confirmTitle.textContent=title;
+      el.confirmMessage.textContent=message;
+      el.confirmAccept.textContent=acceptText;
+      el.confirmAccept.classList.toggle('danger',danger);
+      el.confirmOverlay.classList.add('show');
+
+      const close=result=>{
+        el.confirmOverlay.classList.remove('show');
+        el.confirmCancel.onclick=null;
+        el.confirmAccept.onclick=null;
+        el.confirmOverlay.onclick=null;
+        document.removeEventListener('keydown',onKey);
+        resolve(result);
+      };
+
+      const onKey=e=>{
+        if(e.key==='Escape') close(false);
+      };
+
+      el.confirmCancel.onclick=()=>close(false);
+      el.confirmAccept.onclick=()=>close(true);
+      el.confirmOverlay.onclick=e=>{
+        if(e.target===el.confirmOverlay) close(false);
+      };
+      document.addEventListener('keydown',onKey);
+    });
   }
 
   function escapeHtml(value){
@@ -1064,10 +1181,17 @@
     showScreen('measure');
   });
 
-  el.cycleResults.addEventListener('click',e=>{
+  el.cycleResults.addEventListener('click',async e=>{
     const btn=e.target.closest('[data-delete-cycle]');
     if(!btn) return;
     const index=Number(btn.dataset.deleteCycle);
+    const approved=await askConfirm({
+      title:'Çevrim silinsin mi?',
+      message:'Yalnızca seçilen çevrim silinecek. Bu işlem geri alınamaz.',
+      acceptText:'Çevrimi Sil',
+      danger:true
+    });
+    if(!approved) return;
     state.cycles.splice(index,1);
     saveState();
     renderResults();
@@ -1075,8 +1199,15 @@
     showToast('Çevrim silindi');
   });
 
-  el.deleteLastBtn.addEventListener('click',()=>{
+  el.deleteLastBtn.addEventListener('click',async ()=>{
     if(!state.cycles.length){ showToast('Silinecek çevrim yok'); return; }
+    const approved=await askConfirm({
+      title:'Son çevrim silinsin mi?',
+      message:'Son kaydedilen çevrim kalıcı olarak silinecek.',
+      acceptText:'Son Çevrimi Sil',
+      danger:true
+    });
+    if(!approved) return;
     state.cycles.pop();
     saveState();
     renderResults();
@@ -1084,8 +1215,14 @@
     showToast('Son çevrim silindi');
   });
 
-  el.newStudyBtn.addEventListener('click',()=>{
-    if(!confirm('Yeni çalışma başlatılsın mı? Mevcut ölçümler silinecek.')) return;
+  el.newStudyBtn.addEventListener('click',async ()=>{
+    const approved=await askConfirm({
+      title:'Yeni çalışma başlatılsın mı?',
+      message:'Mevcut ölçümler silinecek ve yeni bir çalışma başlayacak. Bu işlem geri alınamaz.',
+      acceptText:'Yeni Çalışma',
+      danger:false
+    });
+    if(!approved) return;
     state=defaultState();
     run=blankRun();
     saveState();
