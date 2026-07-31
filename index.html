@@ -83,6 +83,15 @@
     .summary-card:nth-child(4){background:#f4f2fb}
     .summary-label{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:5px}
     .summary-value{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums}
+
+    .stage-stats{margin-top:13px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
+    .stage-stats-title{padding:12px 14px;background:var(--purple-soft);font-size:14px;font-weight:900;color:var(--purple-dark)}
+    .stage-stat-row{display:grid;grid-template-columns:minmax(100px,1.4fr) repeat(3,minmax(64px,.8fr));gap:6px;align-items:center;padding:10px 12px;border-top:1px solid var(--line);font-size:12px}
+    .stage-stat-row.header{background:#faf9fd;color:var(--muted);font-weight:800}
+    .stage-stat-name{font-weight:800;text-align:left;word-break:break-word}
+    .stage-stat-value{text-align:center;font-variant-numeric:tabular-nums;font-weight:800}
+    .calculation-note{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--blue-soft);font-size:12px;line-height:1.45;color:var(--blue-dark);font-weight:700}
+
     .empty{padding:20px;text-align:center;color:var(--muted)}
     .data-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
     .hint{font-size:12px;color:var(--muted);line-height:1.45;margin-top:8px}
@@ -134,7 +143,7 @@
     <span id="cycleBadge" class="cycle-badge">Çevrim 1</span>
     <div class="quantity-box">
       <label for="productQty">Ürün adedi</label>
-      <input id="productQty" type="number" min="1" step="1" inputmode="numeric" value="1" />
+      <input id="productQty" type="number" min="1" step="1" inputmode="numeric" pattern="[0-9]*" value="1" />
     </div>
     <div class="quantity-note">Sonuçlar ürün başına süre olarak hesaplanır.</div>
     <div class="current-label">Şu an ölçülen operasyon</div>
@@ -223,7 +232,16 @@
     els.operationsCard.classList.toggle('hidden',!folder||folder.mode==='total');
     els.measurementCard.classList.toggle('hidden',!folder||folder.operations.length===0);
     els.resultsCard.classList.toggle('hidden',!folder);
-    if(folder){ els.productQty.value=folder.productQty||1; renderOperations(); renderMeasurement(); renderResults(); }
+    if(folder){
+      els.productQty.value=folder.productQty||1;
+      const editingLocked=isOperationEditingLocked();
+      els.operationName.disabled=editingLocked;
+      els.addOperationBtn.disabled=editingLocked;
+      els.productQty.disabled=run.running;
+      renderOperations();
+      if(folder.operations.length) renderMeasurement();
+      renderResults();
+    }
   }
   function renderModePicker(){
     els.totalModeBtn.classList.toggle('active',selectedNewMode==='total');
@@ -252,9 +270,9 @@
       const row=document.createElement('div'); row.className='op-row';
       row.innerHTML=`<div class="op-no">${i+1}</div><input value="${escapeHtml(op)}" aria-label="${i+1}. operasyon"><button class="op-delete" aria-label="Sil">×</button>`;
       const input=row.querySelector('input'), del=row.querySelector('button');
-      input.disabled=isMeasurementActive(); del.disabled=isMeasurementActive();
+      input.disabled=isOperationEditingLocked(); del.disabled=isOperationEditingLocked();
       input.onchange=()=>{ const v=input.value.trim(); if(!v){input.value=op;return;} folder.operations[i]=v; saveState(); renderMeasurement(); renderResults(); };
-      del.onclick=()=>{ if(isMeasurementActive()) return toast('Önce bu operasyondeki ölçümü tamamlayın veya sıfırlayın'); if(!confirm(`“${op}” silinsin mi? Mevcut ölçüm tabloları da bu operasyonde sıfırlanacaktır.`)) return;
+      del.onclick=()=>{ if(isOperationEditingLocked()) return toast('Önce devam eden ölçümü tamamlayın veya durdurun'); if(!confirm(`“${op}” silinsin mi? Mevcut ölçüm tabloları da bu operasyonde sıfırlanacaktır.`)) return;
         folder.operations.splice(i,1); folder.cycles=[]; folder.session={elapsed:0,index:0,values:[],completed:false}; loadRunFromFolder(); saveState(); render(); toast('Operasyon silindi'); };
       els.operations.appendChild(row);
     });
@@ -269,8 +287,9 @@
     els.startBtn.textContent=run.elapsed>0&&!run.running?'Devam':'Başlat';
     els.startBtn.disabled=run.running||run.completed; els.lapBtn.disabled=!run.running||run.completed; els.pauseBtn.disabled=!run.running;
     els.newCycleBtn.classList.toggle('hidden',folder.mode==='total'); els.newCycleBtn.disabled=folder.mode==='total'||run.running||!run.completed;
-    els.productQty.disabled=isMeasurementActive();
-    els.operationName.disabled=isMeasurementActive(); els.addOperationBtn.disabled=isMeasurementActive();
+    els.productQty.disabled=run.running;
+    els.operationName.disabled=isOperationEditingLocked();
+    els.addOperationBtn.disabled=isOperationEditingLocked();
     if(run.completed) els.status.textContent='Çevrim kaydedildi. Yeni ölçüm için Yeni Çevrim’e dokunun.';
     else if(run.running) els.status.textContent=folder.mode==='total'?'Tur’a dokununca çevrim ürün adedine bölünerek kaydedilir ve yenisi başlar.':'Operasyon bitince Tur’a dokunun. Süre ürün adedine bölünerek kaydedilir.';
     else if(run.elapsed>0) els.status.textContent='Süre duraklatıldı. Devam etmek için Devam’a dokunun.';
@@ -287,17 +306,18 @@
     const single=folder.mode==='total';
     els.resultMode.textContent=single
       ? 'Her çevrim ayrı kartta gösterilir. Süreler ürün başınadır.'
-      : 'Her çevrimin aşamaları aşağıda dikey olarak gösterilir. Süreler ürün başınadır.';
+      : 'Aşama istatistikleri, aynı sıradaki aşamalar çevrimler arasında karşılaştırılarak hesaplanır.';
     if(!cycles.length){
       els.results.innerHTML='<div class="empty">Henüz kaydedilmiş çevrim yok.</div>';
       return;
     }
 
+    const normalizedCycles=cycles.map(c=>normalizedCycleValues(c));
     const totals=[];
     let html='<div class="cycle-list">';
 
     cycles.forEach((cycle,ci)=>{
-      const values=normalizedCycleValues(cycle);
+      const values=normalizedCycles[ci];
       const qty=Math.max(1,Number(cycle.productQty)||1);
       const total=values.reduce((sum,v)=>sum+(Number(v)||0),0);
       totals.push(total);
@@ -337,31 +357,90 @@
 
     html+='</div>';
 
-    const average=totals.reduce((a,b)=>a+b,0)/totals.length;
-    html+=`<div class="summary-grid">
-      <div class="summary-card">
-        <div class="summary-label">Ortalama</div>
-        <div class="summary-value">${average.toFixed(2)} sn</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">En kısa</div>
-        <div class="summary-value">${Math.min(...totals).toFixed(2)} sn</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">En uzun</div>
-        <div class="summary-value">${Math.max(...totals).toFixed(2)} sn</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">Toplam çevrim</div>
-        <div class="summary-value">${cycles.length}</div>
-      </div>
-    </div>`;
+    if(single){
+      const average=totals.reduce((a,b)=>a+b,0)/totals.length;
+      html+=`<div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">Ortalama</div>
+          <div class="summary-value">${average.toFixed(2)} sn</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">En kısa</div>
+          <div class="summary-value">${Math.min(...totals).toFixed(2)} sn</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">En uzun</div>
+          <div class="summary-value">${Math.max(...totals).toFixed(2)} sn</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Toplam çevrim</div>
+          <div class="summary-value">${cycles.length}</div>
+        </div>
+      </div>`;
+    }else{
+      const stageStats=folder.operations.map((op,oi)=>{
+        const vals=normalizedCycles
+          .map(c=>Number(c[oi]))
+          .filter(Number.isFinite);
+        return {
+          name:op,
+          average:vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0,
+          minimum:vals.length?Math.min(...vals):0,
+          maximum:vals.length?Math.max(...vals):0
+        };
+      });
+
+      const summedAverage=stageStats.reduce((s,x)=>s+x.average,0);
+      const summedMinimum=stageStats.reduce((s,x)=>s+x.minimum,0);
+      const summedMaximum=stageStats.reduce((s,x)=>s+x.maximum,0);
+
+      html+=`<div class="stage-stats">
+        <div class="stage-stats-title">Aşama Bazlı İstatistikler</div>
+        <div class="stage-stat-row header">
+          <div>Aşama</div><div>Ort.</div><div>Min.</div><div>Maks.</div>
+        </div>`;
+
+      stageStats.forEach(stat=>{
+        html+=`<div class="stage-stat-row">
+          <div class="stage-stat-name">${escapeHtml(stat.name)}</div>
+          <div class="stage-stat-value">${stat.average.toFixed(2)}</div>
+          <div class="stage-stat-value">${stat.minimum.toFixed(2)}</div>
+          <div class="stage-stat-value">${stat.maximum.toFixed(2)}</div>
+        </div>`;
+      });
+
+      html+='</div>';
+
+      html+=`<div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">Aşama ortalamaları toplamı</div>
+          <div class="summary-value">${summedAverage.toFixed(2)} sn</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Aşama minimumları toplamı</div>
+          <div class="summary-value">${summedMinimum.toFixed(2)} sn</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Aşama maksimumları toplamı</div>
+          <div class="summary-value">${summedMaximum.toFixed(2)} sn</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Toplam çevrim</div>
+          <div class="summary-value">${cycles.length}</div>
+        </div>
+      </div>`;
+
+      html+=`<div class="calculation-note">
+        Örneğin 1. aşamanın tüm çevrimlerdeki süreleri kendi arasında; 2. aşamanın süreleri kendi arasında hesaplanır. Son toplam, aşama sonuçlarının toplanmasıyla bulunur.
+      </div>`;
+    }
 
     els.results.innerHTML=html;
   }
 
   function avg(vals){ return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):'—'; }
-  function isMeasurementActive(){ return run.running||run.elapsed>0||run.values.length>0||run.completed; }
+  function isMeasurementActive(){ return run.running||run.elapsed>0||run.values.length>0; }
+  function isOperationEditingLocked(){ return run.running||run.elapsed>0||run.values.length>0; }
   function formatTime(ms){ const m=Math.floor(ms/60000),s=Math.floor(ms/1000)%60,h=Math.floor(ms%1000/10); return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(h).padStart(2,'0')}`; }
   function tick(){ run.elapsed=performance.now()-run.startedAt; els.timer.textContent=formatTime(run.elapsed); }
   async function keepAwake(){ try{ if('wakeLock'in navigator) wakeLock=await navigator.wakeLock.request('screen'); }catch{} }
@@ -400,8 +479,17 @@
   els.addFolderBtn.onclick=()=>{ const name=els.folderName.value.trim(); if(!name)return toast('Operasyon adı yazın'); pauseAndSaveCurrent(); const f={id:uid(),name,mode:selectedNewMode,operations:selectedNewMode==='total'?['Tek operasyon']:[],cycles:[],productQty:1,session:{elapsed:0,index:0,values:[],completed:false}}; state.folders.push(f); selectedFolderId=f.id; els.folderName.value=''; loadRunFromFolder(); saveState(); render(); };
   els.renameFolderBtn.onclick=()=>{const f=currentFolder();if(!f)return toast('Önce operasyon seçin');const name=prompt('Yeni operasyon adı:',f.name);if(!name?.trim())return;f.name=name.trim();saveState();render();};
   els.deleteFolderBtn.onclick=()=>{const f=currentFolder();if(!f)return toast('Önce operasyon seçin');deleteFolderById(f.id);};
-  els.productQty.onchange=()=>{ const f=currentFolder(); if(!f)return; const qty=Math.max(1,Math.floor(Number(els.productQty.value)||1)); f.productQty=qty; els.productQty.value=qty; saveState(); renderResults(); toast(`Ürün adedi ${qty} olarak kaydedildi`); };
-  els.addOperationBtn.onclick=()=>{ const f=currentFolder(),name=els.operationName.value.trim(); if(f?.mode==='total')return;if(!f||!name)return toast('Operasyon adı yazın');if(isMeasurementActive())return toast('Önce bu operasyondeki ölçümü tamamlayın');f.operations.push(name);f.cycles=[];f.session={elapsed:0,index:0,values:[],completed:false};els.operationName.value='';loadRunFromFolder();saveState();render();};
+  function saveProductQty(){
+    const f=currentFolder(); if(!f)return;
+    const qty=Math.max(1,Math.floor(Number(els.productQty.value)||1));
+    f.productQty=qty;
+    els.productQty.value=qty;
+    saveState();
+    renderResults();
+  }
+  els.productQty.addEventListener('input',saveProductQty);
+  els.productQty.addEventListener('change',()=>{saveProductQty();toast(`Ürün adedi ${els.productQty.value} olarak kaydedildi`);});
+  els.addOperationBtn.onclick=()=>{ const f=currentFolder(),name=els.operationName.value.trim(); if(f?.mode==='total')return;if(!f||!name)return toast('Operasyon adı yazın');if(isOperationEditingLocked())return toast('Önce devam eden ölçümü tamamlayın veya durdurun');f.operations.push(name);f.cycles=[];f.session={elapsed:0,index:0,values:[],completed:false};els.operationName.value='';loadRunFromFolder();saveState();render();};
   els.operationName.addEventListener('keydown',e=>{if(e.key==='Enter')els.addOperationBtn.click();});
   els.startBtn.onclick=start; els.pauseBtn.onclick=pause; els.lapBtn.onclick=lap; els.newCycleBtn.onclick=newCycle;
   els.results.addEventListener('click',e=>{
