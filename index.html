@@ -1134,6 +1134,9 @@
   });
 
   el.addStageBtn.addEventListener('click',()=>{
+    state.name = el.studyName.value.trim();
+    state.productQty = Math.max(1, Math.floor(Number(el.productQty.value) || 1));
+    saveState();
     const name=el.stageName.value.trim();
     if(!name){ showToast('Adım adını yazın'); return; }
     state.stages.push(name);
