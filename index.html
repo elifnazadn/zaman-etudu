@@ -534,12 +534,12 @@
         <h2 class="section-title">Ölçüm Biçimi</h2>
         <div class="mode-grid">
           <button id="totalModeBtn" class="mode-btn active" type="button">
-            <strong>Tek Süre</strong>
-            <small>Tüm işlemi tek süre olarak ölçer.</small>
+            <strong>Standart Zaman</strong>
+            <small>Tüm işlemin standart zamanını ölçer.</small>
           </button>
           <button id="detailModeBtn" class="mode-btn" type="button">
-            <strong>Çok Adımlı</strong>
-            <small>Adımları Tur ile ayrı ayrı ölçer.</small>
+            <strong>Süreç Analizi</strong>
+            <small>Süreci adım adım analiz eder.</small>
           </button>
         </div>
       </div>
@@ -848,14 +848,14 @@
   }
 
   function currentStageName(){
-    if(state.mode==='total') return 'Tek Süre';
+    if(state.mode==='total') return 'Standart Zaman';
     return state.stages[Math.min(run.stageIndex,state.stages.length-1)] || '—';
   }
 
   function renderMeasure(){
     el.measureOperation.textContent=state.name || '—';
     el.measureStage.textContent=state.mode==='total'
-      ? 'Tek süre'
+      ? 'Standart Zaman'
       : `${run.stageIndex+1}. adım · ${currentStageName()}`;
 
     el.timer.textContent=formatTimer(run.elapsed);
@@ -885,7 +885,7 @@
       const cycleNumber=state.cycles.length-reverseIndex;
       html+=`<div class="cycle-divider">${cycleNumber}. çevrim</div>`;
       normalizedValues(cycle).forEach((value,index)=>{
-        const name=state.mode==='total'?'Tek Süre':state.stages[index];
+        const name=state.mode==='total'?'Standart Zaman':state.stages[index];
         html+=`
           <div class="lap-row">
             <div class="lap-no">${index+1}</div>
@@ -899,7 +899,7 @@
       html+=`<div class="cycle-divider">${state.cycles.length+1}. çevrim · devam ediyor</div>`;
       run.values.forEach((raw,index)=>{
         const value=raw/state.productQty;
-        const name=state.mode==='total'?'Tek Süre':state.stages[index];
+        const name=state.mode==='total'?'Standart Zaman':state.stages[index];
         html+=`
           <div class="lap-row">
             <div class="lap-no">${index+1}</div>
@@ -1084,7 +1084,7 @@
             </div>`;
 
       values.forEach((value,index)=>{
-        const name=state.mode==='total'?'Tek Süre':state.stages[index];
+        const name=state.mode==='total'?'Standart Zaman':state.stages[index];
         html+=`
           <div class="metric-row">
             <span class="metric-name">${escapeHtml(name||'Adım')}</span>
