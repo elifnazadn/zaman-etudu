@@ -670,7 +670,7 @@
         <span style="width:78px"></span>
       </div>
 
-      <div id="editingBanner" class="editing-banner" hidden>Kaydedilmiş çalışma düzenleniyor.</div>
+      <div id="editingBanner" class="editing-banner" hidden>Kaydedilmiş çalışma açık. Değişiklik yapmak için “Kaydı Düzenle”yi kullanın.</div>
       <div class="card">
         <h2 id="resultStudyName" class="section-title">—</h2>
         <div id="resultMeta" class="meta-card"></div>
@@ -687,6 +687,7 @@
         <div id="cycleResults"></div>
       </div>
 
+      <button id="editSavedBtn" class="btn btn-soft save-study" type="button" hidden>Kaydı Düzenle</button>
       <button id="saveStudyBtn" class="btn btn-primary save-study" type="button">Çalışmayı Kaydet</button>
       <div class="results-actions" style="margin-top:9px">
         <button id="deleteLastBtn" class="btn btn-soft" type="button">Son çevrimi sil</button>
@@ -739,7 +740,7 @@
     idleControls:$('idleControls'), runningControls:$('runningControls'),
     resetBtn:$('resetBtn'), startBtn:$('startBtn'), lapBtn:$('lapBtn'), stopBtn:$('stopBtn'),
     newCycleBtn:$('newCycleBtn'), finishBtn:$('finishBtn'), laps:$('laps'),
-    backMeasureBtn:$('backMeasureBtn'), resultStudyName:$('resultStudyName'), resultMeta:$('resultMeta'), editingBanner:$('editingBanner'), saveStudyBtn:$('saveStudyBtn'),
+    backMeasureBtn:$('backMeasureBtn'), resultStudyName:$('resultStudyName'), resultMeta:$('resultMeta'), editingBanner:$('editingBanner'), editSavedBtn:$('editSavedBtn'), saveStudyBtn:$('saveStudyBtn'),
     resultSummary:$('resultSummary'), statsCard:$('statsCard'), stageStats:$('stageStats'),
     cycleResults:$('cycleResults'), deleteLastBtn:$('deleteLastBtn'), newStudyBtn:$('newStudyBtn'),
     recordsScreen:$('recordsScreen'), recordsList:$('recordsList'), backHomeBtn:$('backHomeBtn'), toast:$('toast'), confirmOverlay:$('confirmOverlay'), confirmTitle:$('confirmTitle'), confirmMessage:$('confirmMessage'), confirmCancel:$('confirmCancel'), confirmAlt:$('confirmAlt'), confirmAccept:$('confirmAccept')
@@ -1216,6 +1217,7 @@
     el.resultStudyName.textContent=state.name;
     el.editingBanner.hidden=!editingRecordId;
     el.backMeasureBtn.textContent=editingRecordId?'‹ Ana sayfa':'‹ Ölçüme dön';
+    el.editSavedBtn.hidden=!editingRecordId;
     el.saveStudyBtn.textContent=editingRecordId?'Kaydı Güncelle':'Çalışmayı Kaydet';
     const metaRows=[
       ['Makine Kodu',state.machineCode||'—'],
@@ -1378,11 +1380,20 @@
           ${r.mode==='total'?'Standart Zaman':'Süreç Analizi'} · ${r.cycles?.length||0} çevrim · ${r.productQty||1} ürün
         </div>
         <div class="record-actions">
-          <button class="btn btn-soft" data-open-record="${r.id}" type="button">Aç / Düzenle</button>
+          <button class="btn btn-soft" data-open-record="${r.id}" type="button">Aç</button>
           <button class="btn btn-pink" data-delete-record="${r.id}" type="button">Sil</button>
         </div>
       </article>`).join('');
   }
+  function exitEditingToHome(){
+    editingRecordId=null;
+    state=defaultState();
+    run=blankRun();
+    saveState();
+    renderSetup();
+    showScreen('setup');
+  }
+
   function openRecord(id){
     const r=records.find(x=>x.id===id);
     if(!r) return;
@@ -1428,6 +1439,13 @@
   });
 
   el.saveStudyBtn.addEventListener('click',saveCurrentStudy);
+
+  el.editSavedBtn.addEventListener('click',()=>{
+    if(!editingRecordId) return;
+    renderSetup();
+    showScreen('setup');
+    setTimeout(()=>el.studyName.focus(),100);
+  });
 
   el.recordsBtn.addEventListener('click',()=>{
     syncSetupFieldsToState();
@@ -1520,39 +1538,37 @@
   el.beginStudyBtn.addEventListener('click',async ()=>{
     if(!validateSetup()) return;
 
-    // Kaydedilmiş bir kayıt düzenleniyorsa aynı isim kontrolü yapma.
-    if(!editingRecordId){
-      const normalizedName=String(state.name||'').trim().toLocaleLowerCase('tr-TR');
-      const sameName=records.find(r=>
-        String(r.name||'').trim().toLocaleLowerCase('tr-TR')===normalizedName
-      );
+    const normalizedName=String(state.name||'').trim().toLocaleLowerCase('tr-TR');
+    const sameName=records.find(r=>
+      r.id!==editingRecordId &&
+      String(r.name||'').trim().toLocaleLowerCase('tr-TR')===normalizedName
+    );
 
-      if(sameName){
-        const choice=await askConfirm({
-          title:'Bu isimde kayıt bulundu',
-          message:`"${state.name}" isimli bir çalışma zaten kayıtlı. Yeni bir çalışma için operasyon adını değiştirebilir veya mevcut kaydı açabilirsiniz.`,
-          acceptText:'Mevcut Kaydı Aç',
-          altText:'Yeni İsim Gir',
-          danger:false
-        });
+    if(sameName){
+      const choice=await askConfirm({
+        title:'Bu isimde kayıt bulundu',
+        message:`"${state.name}" isimli bir çalışma zaten kayıtlı. Yeni bir çalışma için operasyon adını değiştirebilir veya mevcut kaydı açabilirsiniz.`,
+        acceptText:'Mevcut Kaydı Aç',
+        altText:'Yeni İsim Gir',
+        danger:false
+      });
 
-        if(choice===true){
-          openRecord(sameName.id);
-          return;
-        }
-
-        if(choice==='alt'){
-          renderSetup();
-          showScreen('setup');
-          setTimeout(()=>{
-            el.studyName.focus();
-            el.studyName.select?.();
-          },100);
-          return;
-        }
-
+      if(choice===true){
+        openRecord(sameName.id);
         return;
       }
+
+      if(choice==='alt'){
+        renderSetup();
+        showScreen('setup');
+        setTimeout(()=>{
+          el.studyName.focus();
+          el.studyName.select?.();
+        },100);
+        return;
+      }
+
+      return;
     }
 
     run=blankRun();
@@ -1584,8 +1600,7 @@
 
   el.backMeasureBtn.addEventListener('click',()=>{
     if(editingRecordId){
-      renderSetup();
-      showScreen('setup');
+      exitEditingToHome();
       return;
     }
     renderMeasure();
