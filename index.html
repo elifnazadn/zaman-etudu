@@ -1002,7 +1002,7 @@
   }
 
   function stageStatistics(){
-    const names=state.mode==='total'?['Tek Süre']:state.stages;
+    const names=state.mode==='total'?['Standart Zaman']:state.stages;
     return names.map((name,index)=>{
       const values=state.cycles
         .map(c=>normalizedValues(c)[index])
@@ -1095,7 +1095,7 @@
       if(state.mode==='detail'){
         html+=`
           <div class="metric-row total">
-            <span class="metric-name">Çevrim Sayısı</span>
+            <span class="metric-name">Toplam Süre</span>
             <span class="metric-value">${total.toFixed(2)} sn</span>
           </div>`;
       }
