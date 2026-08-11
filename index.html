@@ -542,6 +542,13 @@
       .meta-item.full{grid-column:auto}
     }
 
+  
+    @media(max-width:520px){
+      #confirmButtons:has(#confirmAlt:not([hidden])){
+        grid-template-columns:1fr;
+      }
+    }
+
   </style>
 </head>
 
@@ -705,8 +712,9 @@
     <div class="confirm-modal">
       <h3 id="confirmTitle">İşlemi onayla</h3>
       <p id="confirmMessage">Bu işlem geri alınamaz.</p>
-      <div class="confirm-buttons">
+      <div class="confirm-buttons" id="confirmButtons">
         <button id="confirmCancel" class="confirm-cancel" type="button">İptal</button>
+        <button id="confirmAlt" class="confirm-cancel" type="button" hidden>Yeni isim gir</button>
         <button id="confirmAccept" class="confirm-accept" type="button">Onayla</button>
       </div>
     </div>
@@ -734,7 +742,7 @@
     backMeasureBtn:$('backMeasureBtn'), resultStudyName:$('resultStudyName'), resultMeta:$('resultMeta'), editingBanner:$('editingBanner'), saveStudyBtn:$('saveStudyBtn'),
     resultSummary:$('resultSummary'), statsCard:$('statsCard'), stageStats:$('stageStats'),
     cycleResults:$('cycleResults'), deleteLastBtn:$('deleteLastBtn'), newStudyBtn:$('newStudyBtn'),
-    recordsScreen:$('recordsScreen'), recordsList:$('recordsList'), backHomeBtn:$('backHomeBtn'), toast:$('toast'), confirmOverlay:$('confirmOverlay'), confirmTitle:$('confirmTitle'), confirmMessage:$('confirmMessage'), confirmCancel:$('confirmCancel'), confirmAccept:$('confirmAccept')
+    recordsScreen:$('recordsScreen'), recordsList:$('recordsList'), backHomeBtn:$('backHomeBtn'), toast:$('toast'), confirmOverlay:$('confirmOverlay'), confirmTitle:$('confirmTitle'), confirmMessage:$('confirmMessage'), confirmCancel:$('confirmCancel'), confirmAlt:$('confirmAlt'), confirmAccept:$('confirmAccept')
   };
 
   let state = loadState();
@@ -850,17 +858,25 @@
   }
 
 
-  function askConfirm({title,message,acceptText='Onayla',danger=false}){
+  function askConfirm({title,message,acceptText='Onayla',danger=false,altText=''}) {
     return new Promise(resolve=>{
       el.confirmTitle.textContent=title;
       el.confirmMessage.textContent=message;
       el.confirmAccept.textContent=acceptText;
       el.confirmAccept.classList.toggle('danger',danger);
+
+      el.confirmAlt.hidden=!altText;
+      el.confirmAlt.textContent=altText || '';
+
+      const buttonGrid=document.getElementById('confirmButtons');
+      buttonGrid.style.gridTemplateColumns=altText?'1fr 1fr 1fr':'1fr 1fr';
+
       el.confirmOverlay.classList.add('show');
 
       const close=result=>{
         el.confirmOverlay.classList.remove('show');
         el.confirmCancel.onclick=null;
+        el.confirmAlt.onclick=null;
         el.confirmAccept.onclick=null;
         el.confirmOverlay.onclick=null;
         document.removeEventListener('keydown',onKey);
@@ -872,6 +888,7 @@
       };
 
       el.confirmCancel.onclick=()=>close(false);
+      el.confirmAlt.onclick=()=>close('alt');
       el.confirmAccept.onclick=()=>close(true);
       el.confirmOverlay.onclick=e=>{
         if(e.target===el.confirmOverlay) close(false);
@@ -1329,19 +1346,8 @@
     if(refresh) renderRecords();
   }
   function saveCurrentStudy(){
-    if(!state.cycles.length){ showToast('Kaydetmek için en az bir çevrim gerekli'); return; }
-
-    const normalizedName=String(state.name||'').trim().toLocaleLowerCase('tr-TR');
-    const sameName=records.find(r=>
-      r.id!==editingRecordId &&
-      String(r.name||'').trim().toLocaleLowerCase('tr-TR')===normalizedName
-    );
-
-    if(sameName){
-      showToast('Bu isimde kayıt zaten var. Operasyon adını değiştirin.');
-      renderSetup();
-      showScreen('setup');
-      setTimeout(()=>{ el.studyName.focus(); el.studyName.select?.(); },100);
+    if(!state.cycles.length){
+      showToast('Kaydetmek için en az bir çevrim gerekli');
       return;
     }
 
@@ -1357,6 +1363,7 @@
       showToast('Çalışma kaydedildi');
     }
   }
+
   function renderRecords(){
     if(!records.length){
       el.recordsList.innerHTML='<div class="card empty">Henüz kaydedilmiş çalışma yok.</div>';
@@ -1510,8 +1517,44 @@
     if(e.key==='Enter') el.addStageBtn.click();
   });
 
-  el.beginStudyBtn.addEventListener('click',()=>{
+  el.beginStudyBtn.addEventListener('click',async ()=>{
     if(!validateSetup()) return;
+
+    // Kaydedilmiş bir kayıt düzenleniyorsa aynı isim kontrolü yapma.
+    if(!editingRecordId){
+      const normalizedName=String(state.name||'').trim().toLocaleLowerCase('tr-TR');
+      const sameName=records.find(r=>
+        String(r.name||'').trim().toLocaleLowerCase('tr-TR')===normalizedName
+      );
+
+      if(sameName){
+        const choice=await askConfirm({
+          title:'Bu isimde kayıt bulundu',
+          message:`"${state.name}" isimli bir çalışma zaten kayıtlı. Yeni bir çalışma için operasyon adını değiştirebilir veya mevcut kaydı açabilirsiniz.`,
+          acceptText:'Mevcut Kaydı Aç',
+          altText:'Yeni İsim Gir',
+          danger:false
+        });
+
+        if(choice===true){
+          openRecord(sameName.id);
+          return;
+        }
+
+        if(choice==='alt'){
+          renderSetup();
+          showScreen('setup');
+          setTimeout(()=>{
+            el.studyName.focus();
+            el.studyName.select?.();
+          },100);
+          return;
+        }
+
+        return;
+      }
+    }
+
     run=blankRun();
     renderMeasure();
     showScreen('measure');
